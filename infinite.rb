@@ -1,6 +1,6 @@
 def aaaaaaaaaaaaaa()
   while true
-    2+2
+      sleep(1)
   end
 end
 def bbbbbbbbbb()

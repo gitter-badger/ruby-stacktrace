@@ -1,25 +1,36 @@
+// #![cfg_attr(rustc_nightly, feature(test))]
+// #![feature(alloc_system)]
+// 
+// #![feature(alloc_system)]
+// #![feature(global_allocator, allocator_api)]
+// 
+// extern crate alloc_system;
+// 
+// use alloc_system::System;
+// 
+// #[global_allocator]
+// static A: System = System;
+
+
 #[macro_use]
 extern crate log;
 
 extern crate regex;
 extern crate libc;
-extern crate ruby_stacktrace;
 extern crate byteorder;
-extern crate clap;
 extern crate env_logger;
 extern crate read_process_memory;
 
-use clap::{Arg, App, ArgMatches};
-use libc::*;
-use std::process;
+pub mod bindings;
+
 use std::time::Duration;
 use std::thread;
+use std::mem;
 
-use ruby_stacktrace::*;
 use bindings::ruby_2_2_0::*;
 
 pub fn get_stack_trace() -> u64 {
-    let cfps = get_cfps();
+    get_cfps();
     3
 }
 
@@ -28,6 +39,7 @@ fn get_cfps() -> Vec<rb_control_frame_struct> {
 
     let p = ret.as_mut_ptr();
     let cap = ret.capacity();
+    let cfp_size = mem::size_of::<rb_control_frame_struct>() as u64;
 
     let rebuilt: Vec<rb_control_frame_struct> = unsafe {
         // Cast `v` into the void: no destructor run, so we are in
@@ -46,31 +58,10 @@ fn get_cfps() -> Vec<rb_control_frame_struct> {
 }
 
 fn main() {
-    env_logger::init().unwrap();
-
-    let matches = parse_args();
-    let pid: pid_t = matches.value_of("PID").unwrap().parse().unwrap();
-    let command = matches.value_of("COMMAND").unwrap();
-    let source = pid.try_into_process_handle().unwrap();
-    if command.clone() != "top" && command.clone() != "stackcollapse" &&
-        command.clone() != "parse"
-        {
-            println!("COMMAND must be 'top' or 'stackcollapse. Try again!");
-            process::exit(1);
-        }
-
-
-    let ruby_current_thread_address_location: u64 = get_ruby_current_thread_address(pid);
-
-    if command == "stackcollapse" {
-        // This gets a stack trace and then just prints it out
-        // in a format that Brendan Gregg's stackcollapse.pl script understands
-        loop {
-            let trace = stack_trace::get_stack_trace(ruby_current_thread_address_location, &source);
-            debug!("before print");
-            println!("{:?}", trace);
-            thread::sleep(Duration::from_millis(100));
-            debug!("done sleeping");
-        }
+    loop {
+        get_stack_trace();
+        debug!("before print");
+        thread::sleep(Duration::from_millis(100));
+        debug!("done sleeping");
     }
 }

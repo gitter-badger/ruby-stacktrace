@@ -30,18 +30,16 @@ fn get_cfps() -> Vec<rb_control_frame_struct> {
 
     let p = ret.as_mut_ptr();
     let cap = ret.capacity();
-    let cfp_size = mem::size_of::<rb_control_frame_struct>() as u64;
 
     let rebuilt: Vec<rb_control_frame_struct> = unsafe {
         // Cast `v` into the void: no destructor run, so we are in
         // complete control of the allocation to which `p` points.
         // Put everything back together into a Vec
         mem::forget(ret);
-        debug!("unsafe p: {:x}, len: {}, cap: {}, cfp_size: {}", p as u64, cap/(cfp_size as usize), cap, cfp_size);
         Vec::from_raw_parts(
             p as *mut rb_control_frame_struct,
-            cap / (cfp_size as usize),
-            cap,
+            7,
+            560,
             )
     };
 

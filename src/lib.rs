@@ -1,4 +1,16 @@
-#![cfg_attr(rustc_nightly, feature(test))]
+// #![cfg_attr(rustc_nightly, feature(test))]
+// #![feature(alloc_system)]
+// 
+// #![feature(alloc_system)]
+// #![feature(global_allocator, allocator_api)]
+// 
+// extern crate alloc_system;
+// 
+// use alloc_system::System;
+// 
+// #[global_allocator]
+// static A: System = System;
+
 #[macro_use]
 extern crate log;
 
@@ -226,22 +238,26 @@ pub mod stack_trace {
                 format!("{} : {}", label.to_string_lossy(), path.to_string_lossy()).to_string();
             trace.push(current_location);
         }
+        //mem::forget(cfps);
+        debug!("{:?}", trace);
+        debug!("done");
         trace
     }
 
     fn copy_address_raw(addr: *const c_void, length: usize, source_pid: &ProcessHandle) -> Vec<u8> {
-        debug!("copy_address_raw: addr: {:x}", addr as usize);
+        debug!("copy_address_raw: addr: {:x}, length: {}", addr as usize, length);
         let mut copy = vec![0; length];
         match source_pid.copy_address(addr as usize, &mut copy) {
             Ok(_) => {}
             Err(e) => warn!("copy_address failed for {:p}: {:?}", addr, e),
         }
+        debug!("copy_address_raw result: {:?}", copy);
         copy
     }
 
     fn copy_struct<U>(addr: u64, source_pid: &ProcessHandle) -> U {
         let result = copy_address_raw(addr as *const c_void, mem::size_of::<U>(), source_pid);
-        debug!("{:?}", result);
+        debug!("copy_struct ptr: {:x}", result.as_ptr() as u64);
         let s: U = unsafe { std::ptr::read(result.as_ptr() as *const _) };
         s
     }
@@ -252,10 +268,16 @@ pub mod stack_trace {
             let basic = rstring.basic;
             let is_array = basic.flags & 1 << 13 == 0;
             if is_array {
+                unsafe {
+                debug!("ruby_string_addr: {:x}", rstring.as_.ary.as_ref().as_ptr() as u64);
+                }
                 unsafe { CStr::from_ptr(rstring.as_.ary.as_ref().as_ptr() as *const i8) }
                     .to_bytes()
                     .to_vec()
             } else {
+                unsafe {
+                debug!("ruby_string_addr: {:x}", rstring.as_.heap.ptr as u64);
+                }
                 unsafe {
                     let addr = rstring.as_.heap.ptr as u64;
                     let len = rstring.as_.heap.len as usize;
@@ -297,6 +319,7 @@ pub mod stack_trace {
         let value_size = mem::size_of::<VALUE>() as u64;
         let cfp_size = mem::size_of::<rb_control_frame_struct>() as u64;
 
+        println!("{}, {}", stack + stack_size * value_size, cfp_size);
         let stack_base = stack + stack_size * value_size - 1 * cfp_size;
         debug!("cfp addr: {:x}", cfp_address as usize);
         let mut ret = copy_address_raw(
@@ -304,6 +327,7 @@ pub mod stack_trace {
             (stack_base - cfp_address) as usize,
             source_pid,
         );
+        ret = vec![0, 0, 0, 0, 0, 0, 0, 0, 200, 208, 47, 222, 94, 127, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 97, 0, 0, 0, 0, 0, 0, 0, 112, 220, 192, 160, 0, 86, 0, 0, 248, 234, 192, 160, 0, 86, 0, 0, 192, 208, 47, 222, 94, 127, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 160, 249, 207, 160, 0, 86, 0, 0, 48, 67, 220, 160, 0, 86, 0, 0, 168, 208, 47, 222, 94, 127, 0, 0, 128, 248, 219, 160, 0, 86, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 112, 220, 192, 160, 0, 86, 0, 0, 96, 236, 192, 160, 0, 86, 0, 0, 160, 208, 47, 222, 94, 127, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 192, 93, 220, 160, 0, 86, 0, 0, 136, 50, 210, 160, 0, 86, 0, 0, 144, 208, 47, 222, 94, 127, 0, 0, 144, 249, 219, 160, 0, 86, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 112, 220, 192, 160, 0, 86, 0, 0, 96, 236, 192, 160, 0, 86, 0, 0, 136, 208, 47, 222, 94, 127, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 94, 220, 160, 0, 86, 0, 0, 40, 71, 220, 160, 0, 86, 0, 0, 120, 208, 47, 222, 94, 127, 0, 0, 160, 250, 219, 160, 0, 86, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 112, 220, 192, 160, 0, 86, 0, 0, 96, 236, 192, 160, 0, 86, 0, 0, 112, 208, 47, 222, 94, 127, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 94, 220, 160, 0, 86, 0, 0, 88, 74, 220, 160, 0, 86, 0, 0, 96, 208, 47, 222, 94, 127, 0, 0, 176, 251, 219, 160, 0, 86, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 112, 220, 192, 160, 0, 86, 0, 0, 96, 236, 192, 160, 0, 86, 0, 0, 88, 208, 47, 222, 94, 127, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 224, 94, 220, 160, 0, 86, 0, 0, 216, 80, 220, 160, 0, 86, 0, 0, 72, 208, 47, 222, 94, 127, 0, 0, 112, 77, 220, 160, 0, 86, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 112, 220, 192, 160, 0, 86, 0, 0, 96, 236, 192, 160, 0, 86, 0, 0, 64, 208, 47, 222, 94, 127, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 95, 220, 160, 0, 86, 0, 0, 0, 84, 220, 160, 0, 86, 0, 0, 48, 208, 47, 222, 94, 127, 0, 0, 0, 244, 219, 160, 0, 86, 0, 0, 145, 2, 0, 0, 0, 0, 0, 0, 112, 220, 192, 160, 0, 86, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 160, 93, 220, 160, 0, 86, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
         let p = ret.as_mut_ptr();
         let cap = ret.capacity();
@@ -313,6 +337,7 @@ pub mod stack_trace {
             // complete control of the allocation to which `p` points.
             // Put everything back together into a Vec
             mem::forget(ret);
+            debug!("unsafe p: {:x}, len: {}, cap: {}, cfp_size: {}", p as u64, cap/(cfp_size as usize), cap, cfp_size);
             Vec::from_raw_parts(
                 p as *mut rb_control_frame_struct,
                 cap / (cfp_size as usize),

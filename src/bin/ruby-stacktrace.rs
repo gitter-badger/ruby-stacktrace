@@ -67,8 +67,10 @@ fn main() {
         // in a format that Brendan Gregg's stackcollapse.pl script understands
         loop {
             let trace = stack_trace::get_stack_trace(ruby_current_thread_address_location, &source);
+            debug!("before print");
             println!("{:?}", trace);
             thread::sleep(Duration::from_millis(100));
+            debug!("done sleeping");
         }
     }
 }

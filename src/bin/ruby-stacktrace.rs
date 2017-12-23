@@ -49,7 +49,7 @@ fn get_cfps() -> Vec<rb_control_frame_struct> {
 }
 
 fn main() {
-    for x in 0..10 {
+    for _ in 0..10 {
         get_stack_trace();
     }
 }

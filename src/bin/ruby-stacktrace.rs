@@ -11,20 +11,11 @@
 // #[global_allocator]
 // static A: System = System;
 
-
 #[macro_use]
 extern crate log;
 
-extern crate regex;
-extern crate libc;
-extern crate byteorder;
-extern crate env_logger;
-extern crate read_process_memory;
-
 pub mod bindings;
 
-use std::time::Duration;
-use std::thread;
 use std::mem;
 
 use bindings::ruby_2_2_0::*;
@@ -58,10 +49,7 @@ fn get_cfps() -> Vec<rb_control_frame_struct> {
 }
 
 fn main() {
-    loop {
+    for x in 0..10 {
         get_stack_trace();
-        debug!("before print");
-        thread::sleep(Duration::from_millis(100));
-        debug!("done sleeping");
     }
 }

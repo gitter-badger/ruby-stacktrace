@@ -11,21 +11,19 @@
 // #[global_allocator]
 // static A: System = System;
 
-#[macro_use]
-extern crate log;
-
-pub mod bindings;
-
 use std::mem;
 
-use bindings::ruby_2_2_0::*;
-
-pub fn get_stack_trace() -> u64 {
+fn get_stack_trace() -> u64 {
     get_cfps();
     3
 }
 
-fn get_cfps() -> Vec<rb_control_frame_struct> {
+#[repr(C)]
+pub struct blah {
+    pub byte: [::std::os::raw::c_char; 80usize],
+}
+
+fn get_cfps() -> Vec<blah> {
     let mut ret = Vec::with_capacity(560);
     for i in 0..560 {
         ret.push(i);
@@ -34,12 +32,12 @@ fn get_cfps() -> Vec<rb_control_frame_struct> {
     let p = ret.as_mut_ptr();
     let cap = ret.capacity();
 
-    // mem::size_of of rb_control_frame_struct is 80
-    // so make a 7-element vector of rb_control_frame_structs instead
-    let rebuilt: Vec<rb_control_frame_struct> = unsafe { 
+    // mem::size_of of blah is 80
+    // so make a 7-element vector of blahs instead
+    let rebuilt: Vec<blah> = unsafe { 
         mem::forget(ret);
         Vec::from_raw_parts(
-            p as *mut rb_control_frame_struct,
+            p as *mut blah,
             7,
             560,
             )
@@ -49,7 +47,7 @@ fn get_cfps() -> Vec<rb_control_frame_struct> {
 }
 
 fn main() {
-    println!("size of rb_control_frame_struct: {}", mem::size_of::<rb_control_frame_struct >());
+    println!("size of blah: {}", mem::size_of::<blah >());
     for i in 0..10 {
         println!("attempt {}", i);
         get_stack_trace();

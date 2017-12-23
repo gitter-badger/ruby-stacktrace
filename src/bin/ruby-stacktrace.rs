@@ -30,9 +30,7 @@ fn get_cfps() -> Vec<size_80_struct> {
     }
 
     let p = ret.as_mut_ptr();
-    let cap = ret.capacity();
 
-    // mem::size_of of size_80_struct is 80
     // so make a 7-element vector of size_80_structs instead
     let rebuilt: Vec<size_80_struct> = unsafe { 
         mem::forget(ret);

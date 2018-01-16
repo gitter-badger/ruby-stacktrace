@@ -1,54 +1,50 @@
 <a href="https://travis-ci.org/jvns/ruby-stacktrace"><img src="https://travis-ci.org/jvns/ruby-stacktrace.svg"></a>
 
-# ruby-stacktrace
+# rbspy
 
-Have you ever wanted to know what your Ruby program is doing?
-`ruby-stacktrace` can tell you! Maybe.
+Have you ever wanted to know what functions Ruby program is doing? `rbspy` can tell you!
 
-**this is alpha, Linux-only software**. It will very likely crash. If it
-crashes, the rest of your system should probably be fine (it shouldn't
-crash your Ruby). But I wouldn't totally swear that.
-
-Also there are known problems with the sampling and how it calculates
-statistics about your program. Do not take the results of this program as gospel, especially if your computer is under a lot of CPU load. That said, at least 1 person has found it useful in the past.
-
-If you want something that actually works more reliably and is more mature, consider using [stackprof](https://github.com/tmm1/stackprof)
+**this is alpha software**.
 
 ## Requirements
 
-1. Linux (It uses a Linux-only system call)
-2. The most recent pre-release of `ruby-stacktrace` (download from [here](https://github.com/jvns/ruby-stacktrace/releases))
-3. A Ruby version compiled with debugging symbols (check by running
-   `file` on your Ruby binary)
+1. Linux (planning OS X support though!)
+2. The most recent pre-release of `rbspy` (download from [the github releases page](https://github.com/jvns/ruby-stacktrace/releases))
 
-I've tested this succesfully on Ruby versions 2.1.6 and 2.2.3. No
-promises though. It works on my computer and at least 2 other computers.
+rbspy supports Ruby 1.9.1 to 2.5.0. Any Ruby version (system Ruby
 
-## How to use it
+## How to get rbspy
 
-1. Download recent release of `ruby-stacktrace` (download from [here](https://github.com/jvns/ruby-stacktrace/releases))
-1. Find the PID of the Ruby process you want to investigate (like 7723)
-1. run `sudo ./ruby-stacktrace top 7723`
-1. It'll either work (and tell you which functions are being called the most)
-   or crash
-1. I would not run this on a production system today, but I don't know
-   of any specific reason you shouldn't (other than that it's sketchy
-   alpha software)
+1. Download recent release of `rbspy` (download from [the github releases page](https://github.com/jvns/ruby-stacktrace/releases))
+2. Unpack it
+3. Move the `rbspy` binary to `/usr/local/bin`
 
-If it crashes, you can file an issue and attach the Ruby binary for the
-process it couldn't spy on. I will read all the issues and help if I
-can! Especially if it's just that something in this README is explained
-poorly. I have approximately no time to fix issues, so I will probably
-not fix the bug. Pull requests are very welcome!
+## Using rbspy
+
+rbspy currently has 2 features: snapshot and record.
+
+**Snapshot**
+
+Snapshot takes a single stack trace from the specified process and exits. 
+
+```
+rbspy snapshot --pid $PID
+```
+
+**Record**
+
+Record records stack traces from your process for displaying as a flamegraph
+
+```
+rbspy record --file stacks.txt --pid $PID
+rbspy record --file stacks.txt ruby myprogram.rb
+```
 
 ## Generating flamegraphs
 
-You can use this tool to generate flamegraphs for a running Ruby
-process. 
+You can use this tool to generate flamegraphs for a running Ruby process. 
 
 1. Get the [FlameGraph repository](https://github.com/brendangregg/FlameGraph) and add it to your PATH
-1. Run `sudo ./ruby-stacktrace stackcollapse $PID > stacks` until you
-   get bored of collecting data
 1. run `stackcollapse.pl < stacks | flamegraph.pl > output.svg`
 1. Open output.svg! You should get a beautiful graph like this: (click
    to enlarge)
@@ -57,11 +53,10 @@ process.
 
 ## How it works
 
-I wrote a blog post about the internals at [How to spy on a Ruby process](http://jvns.ca/blog/2016/06/12/a-weird-system-call-process-vm-readv/)
+## Missing features
 
-## Threads?
+* Mac support 
 
-It's enough to run this once on the PID and it will sample across all threads.
 
 ## Developing ruby-stacktrace
 
@@ -70,13 +65,10 @@ It's written in Rust.
 1. Install cargo from [crates.io](https://crates.io/)
 1. `cargo build` to build
 1. `cargo test` to test
-1. `cargo bench` for benchmarks
 
-The build artifacts will end up in `target/release`
+The build artifacts will end up in `target/debug`
 
 ## Authors
-
-(in alphabetical order)
 
 * Julia Evans
 * Kamal Marhubi

@@ -8,10 +8,10 @@ Have you ever wanted to know what functions Ruby program is doing? `rbspy` can t
 
 ## Requirements
 
-1. Linux (planning OS X support though!)
+1. Linux (OS X support is planned)
 2. The most recent pre-release of `rbspy` (download from [the github releases page](https://github.com/jvns/ruby-stacktrace/releases))
 
-rbspy supports Ruby 1.9.1 to 2.5.0. Any Ruby version (system Ruby
+rbspy supports Ruby 1.9.1 to 2.5.0.
 
 ## How to get rbspy
 

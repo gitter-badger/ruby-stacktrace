@@ -25,7 +25,7 @@ rbspy currently has 2 features: snapshot and record.
 
 **Snapshot**
 
-Snapshot takes a single stack trace from the specified process and exits. 
+Snapshot takes a single stack trace from the specified process, prints it, and exits. 
 
 ```
 rbspy snapshot --pid $PID
@@ -33,16 +33,16 @@ rbspy snapshot --pid $PID
 
 **Record**
 
-Record records stack traces from your process for displaying as a flamegraph
+Record records stack traces from your process for displaying as a flamegraph. You can either give it
+the PID of an already-running process to record, or ask it to execute and record a new Ruby process.
 
 ```
-rbspy record --file stacks.txt --pid $PID
-rbspy record --file stacks.txt ruby myprogram.rb
+rbspy record --pid $PID
+rbspy record ruby myprogram.rb
 ```
 
-## Generating flamegraphs
+When recording, rbspy will save data to ~/rbspy/records.
 
-You can use this tool to generate flamegraphs for a running Ruby process. 
 
 1. Get the [FlameGraph repository](https://github.com/brendangregg/FlameGraph) and add it to your PATH
 1. run `stackcollapse.pl < stacks | flamegraph.pl > output.svg`
@@ -51,12 +51,13 @@ You can use this tool to generate flamegraphs for a running Ruby process.
 
 <a href="http://jvns.ca/images/sampling.png"><img src="http://jvns.ca/images/sampling.png" width="400px"></a>
 
-## How it works
-
 ## Missing features
 
 * Mac support 
+* Support for multiple threads
+* Support for profiling C extensions (rbspy will simply ignore any calls into C extensions)
 
+## Contributing
 
 ## Developing ruby-stacktrace
 
